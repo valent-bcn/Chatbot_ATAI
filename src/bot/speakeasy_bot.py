@@ -38,7 +38,7 @@ class Agent:
         message = message.strip()  # Elimina spazi all'inizio e alla fine
         if self.is_sparql_query(message):
             # Passa la query a SPARQLQuerySolver e ottieni la risposta
-            result = self.solver.process_query(message)
+            result = self.solver.solveQuery(message)
             return f"I see it's a SPARQL query. Here is the result: {result}"
         elif self.is_factual_question(message):
             return "I understand it's a factual question. Our team is working on the response."
