@@ -11,7 +11,7 @@ class Agent:
     def __init__(self, username, password):
         self.username = username
         self.speakeasy = Speakeasy(host=DEFAULT_HOST_URL, username=username, password=password)
-        self.solver = SPARQLQuerySolver()  # Inizializza l'oggetto che gestisce le query SPARQL
+        self.solver = SPARQLQuerySolver()  # Inizialise the Object Solver, that is unique for the Agent
         self.speakeasy.login()
 
     def listen(self):
