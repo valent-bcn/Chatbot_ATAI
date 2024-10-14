@@ -11,7 +11,7 @@ class Agent:
     def __init__(self, username, password):
         self.username = username
         self.speakeasy = Speakeasy(host=DEFAULT_HOST_URL, username=username, password=password)
-        self.solver = SPARQLQuerySolver()  # Inizialise the Object Solver, that is unique for the Agent
+        self.solver = SPARQLQuerySolver()  # Inizializza l'oggetto che gestisce le query SPARQL
         self.speakeasy.login()
 
     def listen(self):
@@ -24,7 +24,7 @@ class Agent:
                 for message in room.get_messages(only_partner=True, only_new=True):
                     print(f"\t- Chatroom {room.room_id} - new message #{message.ordinal}: '{message.message}' - {self.get_time()}")
                     response = self.process_message(message.message)
-                    room.post_messages(response)
+                    room.post_messages(response.encode('utf-8').decode('latin-1'))
                     room.mark_as_processed(message)
 
                 for reaction in room.get_reactions(only_new=True):
@@ -32,12 +32,9 @@ class Agent:
                     room.post_messages(f"Received your reaction: '{reaction.type}' ")
                     room.mark_as_processed(reaction)
 
-            time.sleep(listen_freq)
-
     def process_message(self, message):
-        message = message.strip()  # Elimina spazi all'inizio e alla fine
+        message = message.strip()
         if self.is_sparql_query(message):
-            # Passa la query a SPARQLQuerySolver e ottieni la risposta
             result = self.solver.solveQuery(message)
             return f"I see it's a SPARQL query. Here is the result: {result}"
         elif self.is_factual_question(message):

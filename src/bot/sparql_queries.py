@@ -21,4 +21,4 @@ class SPARQLQuerySolver:
             return [str(result[0]) for result in results]
         except Exception as e:
             print(f"An error occurred during SPARQL query execution: {e}")
-            return []
+            return ['An error occurred during SPARQL query execution. Please check the query syntax.'] #TODO: being able to correct the queries
