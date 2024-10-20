@@ -56,10 +56,10 @@ class MessageDecomposer:
         }
 
 # Example usage
-decomposer = MessageDecomposer()
-result = decomposer.decompose("Hi, could you tell me Who is the director of Star Wars: Episode VI - Return of the Jedi?")
-#result = decomposer.decompose("Hi, could you tell me What is the genre of the Titanic?")
-#result = decomposer.decompose("Who is the screenwriter of The Masked Gang: Cyprus?")
-#result = decomposer.decompose('When was "The Godfather" released?')
-print("POS Tags:", result['pos_tags'])
-print("Entities:", result['entities'])
+# decomposer = MessageDecomposer()
+# result = decomposer.decompose("Hi, could you tell me Who is the director of Star Wars: Episode VI - Return of the Jedi?")
+# #result = decomposer.decompose("Hi, could you tell me What is the genre of the Titanic?")
+# #result = decomposer.decompose("Who is the screenwriter of The Masked Gang: Cyprus?")
+# #result = decomposer.decompose('When was "The Godfather" released?')
+# print("POS Tags:", result['pos_tags'])
+# print("Entities:", result['entities'])
