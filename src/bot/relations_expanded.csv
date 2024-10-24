@@ -12,6 +12,7 @@ http://www.wikidata.org/prop/direct/P1346,winner
 http://www.w3.org/2000/01/rdf-schema#label,node label
 http://www.wikidata.org/prop/direct/P2758,CNC film rating (France)
 http://www.wikidata.org/prop/direct/P750,distributed by
+http://www.wikidata.org/prop/direct/P750,distributor
 http://www.wikidata.org/prop/direct/P57,director
 http://www.wikidata.org/prop/direct/P17,country
 http://www.wikidata.org/prop/direct/P2554,production designer

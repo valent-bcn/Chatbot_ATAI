@@ -1,9 +1,10 @@
 import difflib
 import rdflib
-
+from message_processor import AttributeRecognizer
 class QueryGenerator:
     def __init__(self, df_relations):
         self.df_relations = df_relations
+        self.recognizer = AttributeRecognizer('relations_expanded.csv')
 
     def generate_query(self, message_output):
         entities = message_output.get('entities', {})

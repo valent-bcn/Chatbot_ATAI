@@ -29,6 +29,7 @@ class Agent:
         
         # Inizializza il generatore di query
         self.query_generator = QueryGenerator(self.df_relations)
+
         self.speakeasy.login()
 
     def listen(self):
@@ -60,7 +61,7 @@ class Agent:
         elif self.is_factual_question(message):
             # 1. Decostruisci il messaggio con MessageDecomposer
             message_output = self.message_decomposer.decompose(message)
-            
+
             # 2. Genera la query SPARQL usando il QueryGenerator
             sparql_query = self.query_generator.generate_query(message_output)
             
