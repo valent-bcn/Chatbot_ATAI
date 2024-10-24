@@ -21,6 +21,9 @@ class QueryGenerator:
         if not relation:
             return None  # Se non troviamo una relazione, non possiamo generare la query.
 
+        # Trasformiamo il relation_label in camel case
+        relation_label = self._to_camel_case(relation_label)
+
         # Debug: Stampa l'ID della relazione e il nome della relazione
         print(f"Relation ID: {relation}, Relation Label: {relation_label}")
         print(f"Entity Text: {entity_text}")
@@ -32,13 +35,21 @@ class QueryGenerator:
         PREFIX schema: <http://schema.org/>
 
         SELECT ?{relation_label} WHERE {{
-            ?movie rdfs:label "{entity_text}"@en .
-                ?movie wdt:{relation} ?{relation_label}Item .
+            ?person rdfs:label "{entity_text}"@en .
+            ?person wdt:{relation} ?{relation_label}Item .
             ?{relation_label}Item rdfs:label ?{relation_label} .
         }}
-        LIMIT 1
+        
+        Limit 1
         """
         return query
+
+    def _to_camel_case(self, label):
+        # Trasforma la stringa in camel case, partendo dalla prima parola in minuscolo e capitalizzando le altre
+        words = label.split(' ')
+        camel_case_label = words[0].lower() + ''.join(word.capitalize() for word in words[1:])
+        return camel_case_label
+
 
     def _map_action_to_relation(self, action):
         # Cerchiamo le relazioni che sono linguisticamente simili al verbo dell'azione
