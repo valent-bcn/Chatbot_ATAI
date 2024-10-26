@@ -1,66 +1,85 @@
-import difflib
+
 import rdflib
-from message_processor import AttributeRecognizer
+import difflib
+import pandas as pd
+from src.bot.message_processor import AttributeRecognizer, MessageCleaner, MessageDecomposer
+
+
+
+
+
 class QueryGenerator:
-    def __init__(self, df_relations):
-        self.df_relations = df_relations
-        self.recognizer = AttributeRecognizer('relations_expanded.csv')
+    def __init__(self):
+        pass
 
     def generate_query(self, message_output):
+        # Estrai entità e relazioni dall'output
         entities = message_output.get('entities', {})
         pos_tags = message_output.get('pos_tags', {})
 
-        if not entities or not pos_tags:
-            return None  # Se non ci sono entità o verbi, non possiamo generare una query.
+        # Controlla se mancano entità o relazioni
+        if not entities:
+            return "No entity recognized"
+        if not pos_tags:
+            return "No relation recognized"
 
-        # Prendiamo la prima entità e il primo verbo trovati
-        entity_text, entity_type = list(entities.items())[0]  # es. 'Titanic', 'MOV'
-        action_text, action_tag = list(pos_tags.items())[0]   # es. 'directed', 'VBD'
+        # Prende la prima entità e la prima relazione
+        entity_id_full, entity_label = list(entities.items())[0]  # es. 'http://www.wikidata.org/entity/Q47703', 'The Godfather'
+        relation_id_full, relation_label = list(pos_tags.items())[0]   # es. 'http://www.wikidata.org/prop/direct/P57', 'director'
 
-        # Troviamo la relazione più plausibile
-        relation, relation_label = self._map_action_to_relation(action_text)
-        if not relation:
-            return None  # Se non troviamo una relazione, non possiamo generare la query.
+        # Estrarre solo l'identificatore dalla relazione (es. P57) e dall'entità (es. Q47703)
+        entity_id = entity_id_full.split('/')[-1]
+        relation_id = relation_id_full.split('/')[-1]
 
-        # Trasformiamo il relation_label in camel case
+        # Converte il label della relazione in camel case
         relation_label = self._to_camel_case(relation_label)
 
-        # Debug: Stampa l'ID della relazione e il nome della relazione
-        print(f"Relation ID: {relation}, Relation Label: {relation_label}")
-        print(f"Entity Text: {entity_text}")
+        # Caso 1: Se la relazione è associata a un dato letterale (es. data, numero)
+        if relation_id in ['P577', 'P2142', 'P345']:  # Esempi di proprietà letterali come 'publication date' o 'box office'
+            query = f"""
+            PREFIX wd: <http://www.wikidata.org/entity/>
+            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-        query = f"""
-        PREFIX ddis: <http://ddis.ch/atai/>
-        PREFIX wd: <http://www.wikidata.org/entity/>
-        PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-        PREFIX schema: <http://schema.org/>
+            SELECT ?{relation_label} WHERE {{
+                ?entity rdfs:label "{entity_label}"@en .
+                ?entity wdt:{relation_id} ?{relation_label} .
+            }}
+            """
+            
+        # Caso 2: Se la relazione è "node description"
+        elif relation_label == "nodeDescription":
+            query = f"""
+            PREFIX wd: <http://www.wikidata.org/entity/>
+            PREFIX schema: <http://schema.org/>
 
-        SELECT ?{relation_label} WHERE {{
-            ?person rdfs:label "{entity_text}"@en .
-            ?person wdt:{relation} ?{relation_label}Item .
-            ?{relation_label}Item rdfs:label ?{relation_label} .
-        }}
+            SELECT ?description WHERE {{
+                ?entity rdfs:label "{entity_label}"@en .
+                ?entity schema:description ?description .
+            }}
+            """
+            
+            
+        # Caso 3: Relazioni standard con entità collegate
+        else:
+            query = f"""
+            PREFIX ddis: <http://ddis.ch/atai/>
+            PREFIX wd: <http://www.wikidata.org/entity/>
+            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+            PREFIX schema: <http://schema.org/>
+
+            SELECT ?{relation_label} WHERE {{
+                ?entity rdfs:label "{entity_label}"@en .
+                ?entity wdt:{relation_id} ?{relation_label}Item .
+                ?{relation_label}Item rdfs:label ?{relation_label} .
+            }}
+        """  
+            
         
-        Limit 1
-        """
         return query
 
     def _to_camel_case(self, label):
-        # Trasforma la stringa in camel case, partendo dalla prima parola in minuscolo e capitalizzando le altre
+        # Trasforma la stringa in camel case
         words = label.split(' ')
         camel_case_label = words[0].lower() + ''.join(word.capitalize() for word in words[1:])
         return camel_case_label
-
-
-    def _map_action_to_relation(self, action):
-        # Cerchiamo le relazioni che sono linguisticamente simili al verbo dell'azione
-        possible_relations = difflib.get_close_matches(action, self.df_relations['Label'], n=1, cutoff=0.6)
-        
-        if possible_relations:
-            relation_row = self.df_relations[self.df_relations['Label'] == possible_relations[0]]
-            if not relation_row.empty:
-                # Otteniamo solo il codice della relazione (es. P57) senza il prefisso completo
-                relation_id = relation_row['ID'].values[0].split('/')[-1]  # estrae solo P57 dall'URI
-                relation_label = relation_row['Label'].values[0]
-                return relation_id, relation_label
-        return None, None

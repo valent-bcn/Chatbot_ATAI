@@ -19,16 +19,7 @@ class Agent:
         self.speakeasy = Speakeasy(host=DEFAULT_HOST_URL, username=username, password=password)
         self.solver = SPARQLQuerySolver()  # Solver per le query SPARQL
         self.message_decomposer = MessageDecomposer()  # Inizializza il decompositore di messaggi
-        
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-
-        # Creiamo il percorso relativo per il file relations.csv
-        relations_path = os.path.join(base_dir, 'relations.csv')
-        
-        self.df_relations = pd.read_csv(relations_path)
-        
-        # Inizializza il generatore di query
-        self.query_generator = QueryGenerator(self.df_relations)
+        self.query_generator = QueryGenerator()
 
         self.speakeasy.login()
 

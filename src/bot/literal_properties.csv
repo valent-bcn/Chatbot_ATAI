@@ -1,9 +1,0 @@
-ID,Label
-http://www.wikidata.org/prop/direct/P345,IMDb ID
-http://www.w3.org/2000/01/rdf-schema#label,node label
-http://schema.org/description,node description
-http://www.wikidata.org/prop/direct/P577,publication date
-http://ddis.ch/atai/tag,No Label
-http://www.wikidata.org/prop/direct/P18,image
-http://ddis.ch/atai/rating,No Label
-http://www.wikidata.org/prop/direct/P2142,box office
