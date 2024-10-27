@@ -2,11 +2,6 @@
 import rdflib
 import difflib
 import pandas as pd
-from src.bot.message_processor import AttributeRecognizer, MessageCleaner, MessageDecomposer
-
-
-
-
 
 class QueryGenerator:
     def __init__(self):
@@ -37,45 +32,40 @@ class QueryGenerator:
         # Caso 1: Se la relazione è associata a un dato letterale (es. data, numero)
         if relation_id in ['P577', 'P2142', 'P345']:  # Esempi di proprietà letterali come 'publication date' o 'box office'
             query = f"""
-            PREFIX wd: <http://www.wikidata.org/entity/>
-            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                            PREFIX wd: <http://www.wikidata.org/entity/>
+                            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 
-            SELECT ?{relation_label} WHERE {{
-                ?entity rdfs:label "{entity_label}"@en .
-                ?entity wdt:{relation_id} ?{relation_label} .
-            }}
-            """
-            
+                            SELECT ?{relation_label} WHERE {{
+                                wd:{entity_id} wdt:{relation_id} ?{relation_label} .
+                            }}
+                            """
+
         # Caso 2: Se la relazione è "node description"
         elif relation_label == "nodeDescription":
             query = f"""
-            PREFIX wd: <http://www.wikidata.org/entity/>
-            PREFIX schema: <http://schema.org/>
+                            PREFIX wd: <http://www.wikidata.org/entity/>
+                            PREFIX schema: <http://schema.org/>
 
-            SELECT ?description WHERE {{
-                ?entity rdfs:label "{entity_label}"@en .
-                ?entity schema:description ?description .
-            }}
-            """
-            
-            
+                            SELECT ?description WHERE {{
+                                wd:{entity_id} schema:description ?description .
+                            }}
+                            """
+
+
         # Caso 3: Relazioni standard con entità collegate
         else:
             query = f"""
-            PREFIX ddis: <http://ddis.ch/atai/>
-            PREFIX wd: <http://www.wikidata.org/entity/>
-            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-            PREFIX schema: <http://schema.org/>
+                        PREFIX ddis: <http://ddis.ch/atai/>
+                        PREFIX wd: <http://www.wikidata.org/entity/>
+                        PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+                        PREFIX schema: <http://schema.org/>
 
-            SELECT ?{relation_label} WHERE {{
-                ?entity rdfs:label "{entity_label}"@en .
-                ?entity wdt:{relation_id} ?{relation_label}Item .
-                ?{relation_label}Item rdfs:label ?{relation_label} .
-            }}
-        """  
-            
-        
+                        SELECT ?{relation_label} WHERE {{
+                            wd:{entity_id} wdt:{relation_id} ?{relation_label}Item .
+                            ?{relation_label}Item rdfs:label ?{relation_label} .
+                        }}
+                        """
+
         return query
 
     def _to_camel_case(self, label):

@@ -1,14 +1,10 @@
-from speakeasypy import Speakeasy, Chatroom
-from typing import List
+from speakeasypy import Speakeasy
 import time
 import re
 from src.bot.sparql_queries import SPARQLQuerySolver  # Importa il solver delle query SPARQL
-from src.bot.message_processor import MessageCleaner, MessageDecomposer
+from src.bot.message_processor import MessageDecomposer, MessageComposer
 from src.bot.query_generator import QueryGenerator
-from src.bot.embeddings import EmbeddingResolver  # Importa l'EmbeddingResolver
-import pandas as pd
-import os
-
+from embeddings.embeddings import EmbeddingResolver  # Importa l'EmbeddingResolver
 
 DEFAULT_HOST_URL = 'https://speakeasy.ifi.uzh.ch'
 listen_freq = 2
@@ -22,6 +18,7 @@ class Agent:
         self.message_decomposer = MessageDecomposer()  # Inizializza il decompositore di messaggi
         self.query_generator = QueryGenerator()
         self.embedding_resolver = EmbeddingResolver()  # Inizializza l'EmbeddingResolver
+        self.message_composer = MessageComposer(self.solver, self.embedding_resolver, self.query_generator)
 
         self.speakeasy.login()
 
@@ -49,25 +46,15 @@ class Agent:
         if self.is_sparql_query(message):
             # Risolvi la query direttamente se è una query SPARQL già formata
             result = self.solver.solveQuery(message)
-            return f"KG: {result}"
+            return f"KG: {result}" #TODO: give a more extensive response
         
         elif self.is_factual_question(message):
             # 1. Decostruisci il messaggio con MessageDecomposer
-            message_output = self.message_decomposer.decompose(message)
+            message_decomposed = self.message_decomposer.decompose(message)
 
-            # 2. Genera la query SPARQL usando il QueryGenerator
-            sparql_query = self.query_generator.generate_query(message_output)
-            
-            # Esegue sia la query SPARQL sia la ricerca di embedding
-            kg_result = self.solver.solveQuery(sparql_query) if sparql_query else "No query generated"
-            embedding_result = self.embedding_resolver.find_most_plausible_responses(message_output, top_n=3)
-            
-            # Prepara la risposta combinata
-            kg_response = f"KG: {kg_result}" if kg_result else "KG: No result found."
-            embedding_response = f"Embeddings: {', '.join(embedding_result)}" if embedding_result else "Embeddings: No result found."
-            
-            return f"{kg_response}\n{embedding_response}"
-        
+            # 2. Construisci il messagio dada la decomposizione
+            response = self.message_composer.compose(message_decomposed).replace('[', '').replace(']', '').replace('{', '').replace('}', '').replace("'", '')
+            return response #TODO: consider doing all the cleaning also by a method of the class MessageCleaner
         else:
             return "Thanks for your message, we are processing your request."
 
