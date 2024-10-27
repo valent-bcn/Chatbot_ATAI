@@ -214,51 +214,51 @@ class MessageComposer:
         return {entity_row['ID']: label for _, entity_row in entity_row.iterrows()}
 
     def compose(self, messagedecomposed):
-        # Check if the label of the entity of the messagedecomposed is multiple
-        print(messagedecomposed['entities'].items())
+        print(messagedecomposed.items())
         id_labels = self.find_id_labels(messagedecomposed['entities'][list(messagedecomposed['entities'].keys())[0]])
         if len(id_labels) > 1:
-            message_result = "According to our knowledge graph, there are multiple entities that you could be referring to. The answers are:"
+            message_result = "According to our knowledge graph, there are multiple entities that you could be referring to, the answers are:"
             for id, label in id_labels.items():
-                messagedecomposed['entities'] = {id: label}
+                local_dict = messagedecomposed.copy()
+                local_dict['entities'] = {id: label}
                 # Generate the SPARQL query
-                sparql_query = self.query_generator.generate_query(messagedecomposed)
+                sparql_query = self.query_generator.generate_query(local_dict)
                 # Get the result from the knowledge graph
                 kg_result = self.sparqlsolver.solveQuery(sparql_query) if sparql_query else "No details found"
-                # Get the node info, due that there's different IDs with the same label, we need to get the node info for each ID
-                # relation_label == "nodeDescription"
-                messagedecomposed['pos_tags'] = {id, "nodeDescription"} # I should pass anyway the relation_id, but 'nodeDescription' suffices to call the relation
-                sparql_query = self.query_generator.generate_query(messagedecomposed)
+                # Get the node info
+                local_dict['pos_tags'] = {'': "node description"}
+                sparql_query = self.query_generator.generate_query(local_dict)
                 node_info = self.sparqlsolver.solveQuery(sparql_query) if sparql_query else None
                 # Append the result
-                message_result += f"\nFor {node_info}, the found result is {kg_result}"
+                message_result += f"\nFor {label} ({node_info}), the found result is {kg_result}"
+                # Fix, the film Julia has different entities, and one of them has no screenwriter.
             return message_result
 
+        # Similar changes should be made to the rest of your method as needed
 
         # Generate the SPARQL query, assuming that there's only one entity valid
         sparql_query = self.query_generator.generate_query(messagedecomposed)
 
         # Ger either the result from the graph and the result from the embeddings
         kg_result = self.sparqlsolver.solveQuery(sparql_query) if sparql_query else None  # "No query generated"
-        print(kg_result)
         embedding_result = self.embbsolver.find_most_plausible_responses(messagedecomposed, top_n=3)
 
         # Now we need to differentiate, if the kg_result is empty then we return the embedding result, and viceversa
         if not kg_result:
             return f"According to our embeddings, the answer to your question is {embedding_result[0]}. However these are also some plausible answers {', '.join(embedding_result[1:])}."
         elif len(kg_result) > 8: # We give a special response in case the kg_result has a high number of responses.
-            return f"There're {len(kg_result)} found results to your question, the top 3 are {kg_result[:3]}."
+            return f"There are {len(kg_result)} found results to your question, the top 3 are {kg_result[:3]}."
         elif embedding_result: # find a way to combine the results, by sets.
             set_kg = set(kg_result)
             set_embedding = set(embedding_result)
             intersection = set_kg.intersection(set_embedding)
             if intersection:
                 return f"The answer to your question is {intersection}."
-            else: # Then we give either the kg_result or the embedding_result, with a 50 50 chance
-                return f"According to our knowledge graph, the answer to your question is {kg_result}." \
-                    if random.choice([True, False]) else f"According to our embeddings, " \
-                                                         f"the answer to your question is {embedding_result[0]}. " \
-                                                         f"However these are also some plausible answers {', '.join(embedding_result[1:])}."
+            else:
+                return f"Our information systems don't give us a single answer to your question:"\
+                       f"\nConsidering the knowedge graph the answer to your question is {kg_result}. "\
+                       f"\nHowever, our embeddings suggest that the answer to your question is {embedding_result[0]}. " \
+                                                         f"Here are also some plausible answers {', '.join(embedding_result[1:])}."
         else:
             return f"According to our knowledge graph, the answer to your question is {kg_result}."
 
