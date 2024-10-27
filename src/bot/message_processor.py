@@ -11,20 +11,41 @@ class MessageCleaner:
         self.wh_pattern = re.compile(r'\b(who|what|when|where)\b', re.IGNORECASE)
 
     def clean(self, message: str) -> str:
+        # Sostituisce ogni occorrenza di '-' con '–'
+        message = message.replace('-', '–')
+        
         match = self.wh_pattern.search(message)
         if match:
             start_index = match.start()
             return message[start_index:].rstrip('?').strip()
+        
         return message
-
+    
 class AttributeRecognizer:
     def __init__(self, relations_path):
         data = pd.read_csv(relations_path)
         self.relations_dict = {row['Label']: row['ID'] for _, row in data.iterrows()}
+        
+        # Configura KeywordProcessor per trovare il match perfetto più lungo
+        self.keyword_processor = KeywordProcessor()
+        for label in self.relations_dict.keys():
+            self.keyword_processor.add_keyword(label)
 
     def recognize(self, recognized_labels: str) -> tuple:
-        best_match_label, score, _ = process.extractOne(recognized_labels, list(self.relations_dict.keys()), scorer=fuzz.WRatio)
+        # Cerca match perfetti usando KeywordProcessor per ottenere il match più lungo
+        perfect_matches = self.keyword_processor.extract_keywords(recognized_labels)
+        if perfect_matches:
+            longest_match = max(perfect_matches, key=len)
+            return self.relations_dict[longest_match], longest_match
+        
+        # Se non c'è un match perfetto, cerca il match più plausibile
+        best_match_label, score, _ = process.extractOne(
+            recognized_labels, list(self.relations_dict.keys()), scorer=fuzz.WRatio
+        )
+        
+        # Restituisce il match più plausibile se trovato
         return (self.relations_dict[best_match_label], best_match_label) if best_match_label else (None, None)
+    
 
 class MessageDecomposer:
     def __init__(self):

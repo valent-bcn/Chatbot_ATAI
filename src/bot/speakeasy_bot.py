@@ -5,6 +5,7 @@ import re
 from src.bot.sparql_queries import SPARQLQuerySolver  # Importa il solver delle query SPARQL
 from src.bot.message_processor import MessageCleaner, MessageDecomposer
 from src.bot.query_generator import QueryGenerator
+from src.bot.embeddings import EmbeddingResolver  # Importa l'EmbeddingResolver
 import pandas as pd
 import os
 
@@ -20,6 +21,7 @@ class Agent:
         self.solver = SPARQLQuerySolver()  # Solver per le query SPARQL
         self.message_decomposer = MessageDecomposer()  # Inizializza il decompositore di messaggi
         self.query_generator = QueryGenerator()
+        self.embedding_resolver = EmbeddingResolver()  # Inizializza l'EmbeddingResolver
 
         self.speakeasy.login()
 
@@ -47,7 +49,7 @@ class Agent:
         if self.is_sparql_query(message):
             # Risolvi la query direttamente se è una query SPARQL già formata
             result = self.solver.solveQuery(message)
-            return f"I see it's a SPARQL query. Here is the result: {result}"
+            return f"KG: {result}"
         
         elif self.is_factual_question(message):
             # 1. Decostruisci il messaggio con MessageDecomposer
@@ -56,12 +58,15 @@ class Agent:
             # 2. Genera la query SPARQL usando il QueryGenerator
             sparql_query = self.query_generator.generate_query(message_output)
             
-            if sparql_query:
-                # 3. Risolvi la query usando SPARQLQuerySolver
-                result = self.solver.solveQuery(sparql_query)
-                return f"I think that it is {result}"
-            else:
-                return "I couldn't generate a query for this question."
+            # Esegue sia la query SPARQL sia la ricerca di embedding
+            kg_result = self.solver.solveQuery(sparql_query) if sparql_query else "No query generated"
+            embedding_result = self.embedding_resolver.find_most_plausible_responses(message_output, top_n=3)
+            
+            # Prepara la risposta combinata
+            kg_response = f"KG: {kg_result}" if kg_result else "KG: No result found."
+            embedding_response = f"Embeddings: {', '.join(embedding_result)}" if embedding_result else "Embeddings: No result found."
+            
+            return f"{kg_response}\n{embedding_response}"
         
         else:
             return "Thanks for your message, we are processing your request."
