@@ -229,9 +229,8 @@ class MessageComposer:
                 local_dict['pos_tags'] = {'': "node description"}
                 sparql_query = self.query_generator.generate_query(local_dict)
                 node_info = self.sparqlsolver.solveQuery(sparql_query) if sparql_query else None
-                # Append the result
-                message_result += f"\nFor {label} ({node_info}), the found result is {kg_result}"
-                # Fix, the film Julia has different entities, and one of them has no screenwriter.
+                # Append the result if found, if not append a message
+                message_result += f"\nFor {label} ({node_info}), the found result is {kg_result}" if kg_result else f"\nFor {label} ({node_info}), no details found."
             return message_result
 
         # Similar changes should be made to the rest of your method as needed

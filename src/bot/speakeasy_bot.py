@@ -46,7 +46,7 @@ class Agent:
         if self.is_sparql_query(message):
             # Risolvi la query direttamente se è una query SPARQL già formata
             result = self.solver.solveQuery(message)
-            return f"KG: {result}" #TODO: give a more extensive response
+            return f"It looks like you're trying to solve a SPARQL query.\nHere's the result: {result}" if result else "No results found."
         
         elif self.is_factual_question(message):
             # 1. Decostruisci il messaggio con MessageDecomposer
