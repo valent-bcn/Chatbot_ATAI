@@ -10,17 +10,18 @@ class QueryGenerator:
     def generate_query(self, message_output):
         # Estrai entità e relazioni dall'output
         entities = message_output.get('entities', {})
-        pos_tags = message_output.get('pos_tags', {})
+        print(entities)
+        relations = message_output.get('relations', {})
 
         # Controlla se mancano entità o relazioni
         if not entities:
             return "No entity recognized"
-        if not pos_tags:
+        if not relations:
             return "No relation recognized"
 
         # Prende la prima entità e la prima relazione
         entity_id_full, entity_label = list(entities.items())[0]  # es. 'http://www.wikidata.org/entity/Q47703', 'The Godfather'
-        relation_id_full, relation_label = list(pos_tags.items())[0]   # es. 'http://www.wikidata.org/prop/direct/P57', 'director'
+        relation_id_full, relation_label = list(relations.items())[0]   # es. 'http://www.wikidata.org/prop/direct/P57', 'director'
 
         # Estrarre solo l'identificatore dalla relazione (es. P57) e dall'entità (es. Q47703)
         entity_id = entity_id_full.split('/')[-1]

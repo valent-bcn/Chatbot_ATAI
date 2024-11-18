@@ -30,7 +30,7 @@ class EmbeddingResolver:
     def find_most_plausible_responses(self, decomposed_output, top_n=3):
         # Estrai l'ID di entità e relazione dal risultato decomposizione
         entity_id = list(decomposed_output.get('entities', {}).keys())[0]
-        relation_id = list(decomposed_output.get('pos_tags', {}).keys())[0]
+        relation_id = list(decomposed_output.get('relations', {}).keys())[0]
 
         # Verifica che gli ID esistano nei rispettivi dataset
         if entity_id not in self.entity_ids or relation_id not in self.relation_ids:
