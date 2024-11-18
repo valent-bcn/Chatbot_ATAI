@@ -282,7 +282,7 @@ class MessageComposer:
         if not decomposed['relations']: # If there are no relations, we assume is a Recommendation
             recommendation_dict = self.recommsolver.process_recommendation_direct(decomposed['entities'])
             # Give the node description for each entity of the recommendation dict
-            message_result = f"Here's a list of recommendations that may interest you: \n"
+            message_result = f"Here is a list of recommendations that may interest you: \n"
             for id, label in recommendation_dict.items():
                 local_dict = {'entities': {id: label}, 'relations': {'': 'node description'}}
                 sparql_query = self.query_generator.generate_query(local_dict)
