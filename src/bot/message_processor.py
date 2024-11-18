@@ -108,15 +108,15 @@ class MessageDecomposer:
         self.entities_dataset = pd.read_csv(entities_path)
         self.film_double_dataset = pd.read_csv('dataset/film_double.csv')
 
-        self.keyword_processor = KeywordProcessor()
+        self.keyword_processor = KeywordProcessor(case_sensitive=True)
         for film in self.film_dataset['Label']:
             self.keyword_processor.add_keyword(film)
 
-        self.keyword_processor2 = KeywordProcessor()
+        self.keyword_processor2 = KeywordProcessor(case_sensitive=True)
         for human in self.humans_dataset['Label']:
             self.keyword_processor2.add_keyword(human)
 
-        self.keyword_processor3 = KeywordProcessor()
+        self.keyword_processor3 = KeywordProcessor(case_sensitive=True)
         for entity in self.entities_dataset['Label']:
             self.keyword_processor3.add_keyword(entity)
 
@@ -130,13 +130,15 @@ class MessageDecomposer:
         # Funzione interna per cercare e sostituire entità in modo iterativo
         def search_and_replace(keyword_processor, dataset, message):
             found_any = False
-            while True:
+            previous_message = None
+            while message != previous_message:  # Termina se il messaggio non cambia
+                previous_message = message
                 matches = keyword_processor.extract_keywords(message)
                 if not matches:
-                    break  # Esci dal ciclo se non ci sono più match
-                longest_match = max(matches, key=len)  # Estrai il match più lungo
+                    break
+                longest_match = max(matches, key=len)
                 entity_row = dataset.loc[dataset['Label'] == longest_match].iloc[0]
-                message = message.replace(longest_match, 'AAA', 1)  # Sostituisci solo la prima occorrenza
+                message = message.replace(longest_match, 'AAA', 1)
                 entities[entity_row['ID']] = longest_match
                 found_any = True
             return message, found_any
@@ -196,7 +198,7 @@ class MessageDecomposer:
                     return self.decomposed_data # TODO: Else??
 
             # Controllo per "cast member"
-            actor_terms = ["actors", "acted", "act", "actor", "acts", "actors", "casted", "casts", "cast"]
+            actor_terms = ["actors", "acted", "act", "actor", "acts", "actors", "casted", "casts", "cast", "character", "characters"]
             if any(term in cleaned_message.lower() for term in actor_terms):
                 cast_member_relation = process.extractOne("cast member",
                                                           list(self.relations_recognizer.relations_dict.keys()),
