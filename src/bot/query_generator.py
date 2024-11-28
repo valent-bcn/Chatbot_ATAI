@@ -31,7 +31,7 @@ class QueryGenerator:
         relation_label = self._to_camel_case(relation_label)
 
         # Caso 1: Se la relazione è associata a un dato letterale (es. data, numero)
-        if relation_id in ['P577', 'P2142', 'P345']:  # Esempi di proprietà letterali come 'publication date' o 'box office'
+        if relation_id in ['P577', 'P2142', 'P345', 'P18', 'P345']:  # Esempi di proprietà letterali come 'publication date' o 'box office'
             query = f"""
                             PREFIX wd: <http://www.wikidata.org/entity/>
                             PREFIX wdt: <http://www.wikidata.org/prop/direct/>

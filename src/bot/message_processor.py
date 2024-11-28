@@ -269,6 +269,33 @@ class MessageComposer:
         self.query_generator = QueryGenerator
         self.film_dataset = pd.read_csv(FILM_PATH)
         self.recommsolver = RecommendationSolver
+        self.crowdsourcing = pd.read_csv('dataset/crowd_data/crowd_data_aggregated.csv')
+
+    #TODO: Implement the crowd_answer method
+    def is_crowd_answerable(self, messagedecomposed: DecomposedData) -> bool:
+
+        entities = messagedecomposed.data['entities']
+        relations = messagedecomposed.data['relations']
+
+        if not entities:
+            return False
+        # Include directly the answer for "isInstanceofSubclass" relation
+        if 'P279' in relations.keys() or 'node description' in relations.values():
+            return True
+
+        # Assuming you are retrieving the first entity ID from the 'entities' dictionary
+        entity_id = list(entities.keys())[0]
+        # split('/')[-1] to get the ID of entity_id
+        entity_id = entity_id.split('/')[-1]
+
+
+        # Assuming you are retrieving the first relation ID from the 'relations' dictionary
+        relation_id = list(relations.keys())[0]
+        relation_id = relation_id.split('/')[-1]
+
+        # Check if the relation is in the crowd_data_aggregated.csv
+        return self.crowdsourcing[(self.crowdsourcing['Input1ID'] == entity_id) & (self.crowdsourcing['Input2ID'] == relation_id)].shape[0] > 0
+
 
     def find_id_labels(self, label):
         entity_row = self.film_dataset.loc[self.film_dataset['Label'] == label]
