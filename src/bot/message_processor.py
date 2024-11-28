@@ -220,7 +220,7 @@ class MessageDecomposer:
                     return self.decomposed_data.set_relations({relation_id: screenwriter_relation[0]}).set_entities(entities)
 
             recommendation_terms = [" recommend ", " recommend ", " recommendation ", " recommended ", " recommends ",
-                                    " similar ", " like ", " suggest ", " suggestion ", " suggested ", " recommend ",
+                                    " similar ", " like ", " liked ",  " suggest ", " suggestion ", " suggested ", " recommend ",
                                     " recommends ", ]
             if any(term in modified_message.lower() for term in recommendation_terms):
                 # Crea una copia temporanea del dizionario per l'iterazione
